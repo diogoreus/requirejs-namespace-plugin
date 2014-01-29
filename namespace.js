@@ -3,13 +3,13 @@
  * @version 0.0.1
  * Loads modules into a namespace
  */
-define([ "module" ], function (module) {
+define(["module"], function(module) {
     return {
-        load: function (name, req, onload, config) {
+        load: function(name, req, onload, config) {
             var localConfig = module.config();
 
             var modules = localConfig[name],
-                path = [ name ];
+                path = [name];
 
             if (!modules) {
                 var err = new Error("Module configuration is missing");
@@ -18,9 +18,9 @@ define([ "module" ], function (module) {
                 return;
             }
 
-            modules = modules.split(",");
+            modules = Object.prototype.toString.call(modules) === '[object Array]' ? modules : modules.split(",");
 
-            var paths = modules.map(function (module) {
+            var paths = modules.map(function(module) {
                 path[1] = module;
                 module = path.join("/");
 
@@ -31,11 +31,11 @@ define([ "module" ], function (module) {
                 return module;
             });
 
-            req(paths, function () {
+            req(paths, function() {
                 var namespace = {},
                     args = arguments;
 
-                modules.forEach(function (module, idx) {
+                modules.forEach(function(module, idx) {
                     namespace[module] = args[idx];
                 });
 
