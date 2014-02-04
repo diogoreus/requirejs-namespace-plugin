@@ -64,16 +64,29 @@ define(["module"], function(module) {
                     args = arguments;
 
                 modules.forEach(function(module, idx) {
-                    var indexPlugin = module.indexOf('!'),
+                    var subModule,
                         indexSubMod = module.indexOf('/');
+
+                    console.log(module);
+
+                    if (indexSubMod !== -1) {
+                        var subModules = module.split('/');
+                        subModule = subModules[0];
+                        module = subModules[1];
+                    }
+
+                    var indexPlugin = module.indexOf('!');
 
                     if (indexPlugin !== -1) {
                         var moduleString = module.substring(indexPlugin + 1, module.indexOf('.'));
-                        namespace[moduleString] = args[idx];
-                    } else if (indexSubMod !== -1) {
-                        var subModules = module.split('/');
-                        namespace[subModules[0]] = namespace[subModules[0]] ? namespace[subModules[0]] : {};
-                        namespace[subModules[0]][subModules[1]] = args[idx];
+                        module = moduleString;
+                    }
+
+                    console.log(module);
+
+                    if (indexSubMod !== -1) {
+                        namespace[subModule] = namespace[subModule] ? namespace[subModule] : {};
+                        namespace[subModule][module] = args[idx];
                     } else {
                         namespace[module] = args[idx];
                     }
