@@ -25,14 +25,16 @@ define(["module"], function(module) {
                 for (var i = 0, limit = modules.length; i < limit; i++) {
                     var index = modules[i].indexOf('!')
 
-                    if (index !== -1) {
-                        var plugin = modules[i].substr(0, index + 1),
-                            moduleString = modules[i].substr(index + 1);
+                    if (modules[i] != undefined) {
+                        if (index !== -1) {
+                            var plugin = modules[i].substr(0, index + 1),
+                                moduleString = modules[i].substr(index + 1);
 
-                        paths.push(plugin + baseURL + '/' + moduleString);
+                            paths.push(plugin + baseURL + '/' + moduleString);
 
-                    } else {
-                        paths.push(baseURL + '/' + modules[i]);
+                        } else {
+                            paths.push(baseURL + '/' + modules[i]);
+                        }
                     }
                 };
             }
@@ -63,11 +65,11 @@ define(["module"], function(module) {
                 var namespace = {},
                     args = arguments;
 
-                modules.forEach(function(module, idx) {
-                    var subModule,
+                for (var i = 0; i < modules.length; i++) {
+                    var module = modules[i],
+                        idx = i,
+                        subModule,
                         indexSubMod = module.indexOf('/');
-
-                    console.log(module);
 
                     if (indexSubMod !== -1) {
                         var subModules = module.split('/');
@@ -82,15 +84,13 @@ define(["module"], function(module) {
                         module = moduleString;
                     }
 
-                    console.log(module);
-
                     if (indexSubMod !== -1) {
                         namespace[subModule] = namespace[subModule] ? namespace[subModule] : {};
                         namespace[subModule][module] = args[idx];
                     } else {
                         namespace[module] = args[idx];
                     }
-                });
+                };
 
                 onload(namespace);
             });
