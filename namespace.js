@@ -12,7 +12,21 @@ define(["module"], function(module) {
                 path = [name],
                 type = Object.prototype.toString.call(configObj),
                 // baseURL = type === '[object Object]' ? configObj.baseURL : name,
-                paths = [];
+                paths = [],
+                reiterate = function(configObj) {
+                    for (var key in configObj) {
+                        if (configObj.hasOwnProperty(key)) {
+
+                            var mods = configObj[key].paths;
+                            if (!mods) return reiterate(configObj[key]);
+                            
+                            for (var i = 0, limit = mods.length; i < limit; i++) {
+                                modules.push(key + "/" + mods[i]);
+                            }
+                            insertPaths(configObj[key].paths, configObj[key].baseURL);
+                        }
+                    }
+                };
 
             if (!configObj) {
                 var err = new Error("Module configuration is missing");
@@ -47,15 +61,7 @@ define(["module"], function(module) {
                     modules = configObj.split(",");
                     insertPaths(modules, name);
                 } else if (type === '[object Object]') {
-                    for (var key in configObj) {
-                        if (configObj.hasOwnProperty(key)) {
-                            var mods = configObj[key].paths;
-                            for (var i = 0, limit = mods.length; i < limit; i++) {
-                                modules.push(key + "/" + mods[i]);
-                            }
-                            insertPaths(configObj[key].paths, configObj[key].baseURL);
-                        }
-                    }
+                    reiterate(configObj);
                 }
             }
 
