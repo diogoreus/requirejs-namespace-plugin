@@ -13,15 +13,22 @@ define(["module"], function(module) {
                 type = Object.prototype.toString.call(configObj),
                 // baseURL = type === '[object Object]' ? configObj.baseURL : name,
                 paths = [],
-                reiterate = function(configObj) {
+                reiterate = function(configObj, propnames) {
                     for (var key in configObj) {
                         if (configObj.hasOwnProperty(key)) {
 
                             var mods = configObj[key].paths;
-                            if (!mods) return reiterate(configObj[key]);
-                            
+                            if (!mods) {
+                                if (!propnames) {
+                                    propnames = [];
+                                }
+                                propnames.push(key);
+                                return reiterate(configObj[key], propnames);
+                            }
+
                             for (var i = 0, limit = mods.length; i < limit; i++) {
-                                modules.push(key + "/" + mods[i]);
+                                var module_prefix = propnames && propnames.length ? (propnames.join("/") + "/") : '';
+                                modules.push(module_prefix + key + "/" + mods[i]);
                             }
                             insertPaths(configObj[key].paths, configObj[key].baseURL);
                         }
@@ -36,6 +43,7 @@ define(["module"], function(module) {
             }
 
             var insertPaths = function(modules, baseURL) {
+
                 for (var i = 0, limit = modules.length; i < limit; i++) {
                     var index = modules[i].indexOf('!')
 
@@ -65,37 +73,41 @@ define(["module"], function(module) {
                 }
             }
 
-            // console.log(paths, modules);
-
             req(paths, function() {
                 var namespace = {},
                     args = arguments;
 
                 for (var i = 0; i < modules.length; i++) {
+
                     var module = modules[i],
                         idx = i,
-                        subModule,
-                        indexSubMod = module.indexOf('/');
+                        paths = module.split('/'),
+                        paths_len = paths.length;
 
-                    if (indexSubMod !== -1) {
-                        var subModules = module.split('/');
-                        subModule = subModules[0];
-                        module = subModules[1];
+                    if (!paths_len) continue;
+
+                    for (var l = 0, n = namespace; l < paths_len; l++) {
+                        var path = paths[l],
+                            index_plugin = path.indexOf('!');
+
+                        // remove a marcacao de plugin: `json!`, `text!`, etc...
+                        if (index_plugin >= 0) {
+                            path = paths[l] = path.substring(index_plugin + 1, path.indexOf('.'));
+                        }
+
+                        // cria sub-objetos caso nao existam
+                        if (!n[path]) {
+                            n[path] = {};
+                        }
+
+                        if (l < paths_len - 1) {
+                            // não é o ultimo indice do array
+                            n = n[path];
+                        }
                     }
 
-                    var indexPlugin = module.indexOf('!');
+                    n[paths[paths_len - 1]] = args[idx];
 
-                    if (indexPlugin !== -1) {
-                        var moduleString = module.substring(indexPlugin + 1, module.indexOf('.'));
-                        module = moduleString;
-                    }
-
-                    if (indexSubMod !== -1) {
-                        namespace[subModule] = namespace[subModule] ? namespace[subModule] : {};
-                        namespace[subModule][module] = args[idx];
-                    } else {
-                        namespace[module] = args[idx];
-                    }
                 };
 
                 onload(namespace);
